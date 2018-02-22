@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "796298655752",
+    "firebase_url": "https://testing-77977.firebaseio.com",
+    "project_id": "testing-77977",
+    "storage_bucket": "testing-77977.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:796298655752:android:859fb845f23cb9e0",
+        "android_client_info": {
+          "package_name": "com.example.meizar.test"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "796298655752-agp5ano229vhm2863u00jv85r0udkost.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKrH7eMwFk4RMTai88ryVSZHK3utpKMoQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "796298655752-cr5m77947lr59fku42studfbis60me6k.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.meizar.test"
+              }
+            },
+            {
+              "client_id": "796298655752-agp5ano229vhm2863u00jv85r0udkost.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
