@@ -1,10 +1,16 @@
 package com.example.meizar.test;
 
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -12,7 +18,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -21,12 +31,18 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.EventListener;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    DatabaseReference mRef;
+    DatabaseReference mRef, mRefBus;
     private EventListener mRefListener;
+    private Bus mBus;
+    private Location cameraLocation;
+    private Button mButton;
+    private Map<String, Marker> busMarkerList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +54,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         mRef = database.getReference("Haltes");
+        mRefBus = database.getReference("Buses");
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        cameraLocation = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
+        mButton = (Button) findViewById(R.id.button2);
+        busMarkerList = new HashMap<String, Marker>();
+
     }
 
 
@@ -71,24 +94,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
-        //mRefListener = mRef.addValueEventListener(new ValueEventListener() {
-        //    @Override
-        //    public void onDataChange(DataSnapshot dataSnapshot) {
-        //        for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
-        //            Halte mHalte = singleSnapshot.getValue(Halte.class);
-        //            mText = mText + " " + mHalte.getName();
-        //       }
-        //       mTextView.setText(mText);
-        //    }
+        mRefBus.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot valueSnapshot : dataSnapshot.getChildren()) {
+                    Bus mBus = valueSnapshot.getValue(Bus.class);
+                    LatLng busLoc = new LatLng(mBus.getLatitude(), mBus.getLongitude());
+                    Marker busMarker = busMarkerList.get(mBus.getPlat());
+                    if(busMarker == null){
+                        busMarker = mMap.addMarker(new MarkerOptions()
+                                .position(busLoc)
+                                .title(mBus.getPlat())
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                        );
+                        busMarkerList.put(mBus.getPlat(), busMarker);
+                    }
+                    else{
+                        busMarker.setPosition(busLoc);
+                    }
+                }
+        }
 
-        //    @Override
-        //    public void onCancelled(DatabaseError databaseError) {
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
 
-        //    }
-        //});
-        // Add a marker in Sydney and move the camera
-        //LatLng sydney = new LatLng(-34, 151);
-        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+            }
+        });
+
+        if(cameraLocation != null)
+        {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(cameraLocation.getLatitude(), cameraLocation.getLongitude()), 13));
+
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(new LatLng(cameraLocation.getLatitude(), cameraLocation.getLongitude()))      // Sets the center of the map to location user
+                    .zoom(17)                   // Sets the zoom level
+                    .build();                   // Creates a CameraPosition from the builder
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        }
+        mButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //busMarker.setPosition(new LatLng(-7.760171, 110.383));
+            }
+        });
     }
 }
