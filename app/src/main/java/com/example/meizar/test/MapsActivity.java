@@ -1,24 +1,17 @@
 package com.example.meizar.test;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -41,7 +34,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private EventListener mRefListener;
     private Bus mBus;
     private Location cameraLocation;
-    private Button mButton;
     private Map<String, Marker> busMarkerList;
 
     @Override
@@ -52,13 +44,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         mRef = database.getReference("Haltes");
         mRefBus = database.getReference("Buses");
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         cameraLocation = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
-        mButton = (Button) findViewById(R.id.button2);
+
         busMarkerList = new HashMap<String, Marker>();
 
     }
@@ -121,6 +114,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(Marker marker) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                View v = null;
+                try{
+                    v = getLayoutInflater().inflate(R.layout.custom_infowindow, null);
+                }
+                catch (Exception ex){
+                    System.out.print(ex.getMessage());
+                }
+                return v;
+            }
+        });
+
         if(cameraLocation != null)
         {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(cameraLocation.getLatitude(), cameraLocation.getLongitude()), 13));
@@ -131,11 +143,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .build();                   // Creates a CameraPosition from the builder
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
-        mButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //busMarker.setPosition(new LatLng(-7.760171, 110.383));
-            }
-        });
+
     }
 }
