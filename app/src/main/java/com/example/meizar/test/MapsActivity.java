@@ -7,7 +7,12 @@ import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -35,11 +40,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Bus mBus;
     private Location cameraLocation;
     private Map<String, Marker> busMarkerList;
+    private LocationManager locationManager;
+    PlaceAutocompleteFragment placeAutoComplete;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -48,11 +56,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         mRef = database.getReference("Haltes");
         mRefBus = database.getReference("Buses");
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        cameraLocation = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         busMarkerList = new HashMap<String, Marker>();
+
+        placeAutoComplete = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete);
+        placeAutoComplete.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                Toast.makeText(getApplicationContext(), place.getName(), Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(Status status) {
+
+            }
+        });
 
     }
 
@@ -70,6 +89,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMyLocationEnabled(true);
+        Criteria criteria = new Criteria();
+        cameraLocation = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
 
         mRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -78,7 +99,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Halte mHalte = singleSnapshot.getValue(Halte.class);
                     //Toast.makeText(getApplicationContext(), mHalte.getName(), Toast.LENGTH_SHORT).show();
                     LatLng loc = new LatLng(mHalte.getLatitude(), mHalte.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(loc).title(mHalte.getName()));
+                    mMap.addMarker(new MarkerOptions()
+                            .position(loc)
+                            .title(mHalte.getName())
+                    );
                 }
             }
 
@@ -99,6 +123,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 .position(busLoc)
                                 .title(mBus.getPlat())
                                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                                .snippet("Penumpang : " + mBus.getPassenger_count())
                         );
                         busMarkerList.put(mBus.getPlat(), busMarker);
                     }
@@ -114,6 +139,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        /*
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
             public View getInfoWindow(Marker marker) {
@@ -132,6 +158,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return v;
             }
         });
+        */
 
         if(cameraLocation != null)
         {
