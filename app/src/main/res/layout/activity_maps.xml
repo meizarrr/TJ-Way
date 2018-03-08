@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -6,10 +7,13 @@
     android:gravity="center"
     android:weightSum="1">
 
+    <include layout="@layout/toolbar_layout"/>
+
     <fragment
         android:id="@+id/place_autocomplete"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
         android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
         />
 
@@ -22,4 +26,5 @@
         android:layout_height="match_parent"
         tools:context="com.example.meizar.test.MapsActivity">
     </fragment>
+
 </LinearLayout>

@@ -10,6 +10,7 @@ public class Bus {
     public double longitude;
     public int passenger_count;
     public String trayek;
+    public double jarak;
 
     public Bus() {}
     public Bus(String plat, double latitude, double longitude, int passenger_count, String trayek)
@@ -37,5 +38,12 @@ public class Bus {
 
     public String getTrayek() {
         return trayek;
+    }
+    public double getJarak(){
+        return jarak;
+    }
+
+    public void setJarak(double jarak){
+        this.jarak = jarak;
     }
 }

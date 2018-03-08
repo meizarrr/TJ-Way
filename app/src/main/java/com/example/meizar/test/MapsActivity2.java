@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -13,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
@@ -23,7 +23,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -38,14 +37,14 @@ import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MapsActivity2 extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener
+{
 
     private GoogleMap mMap;
     DatabaseReference mRef, mRefBus;
     private EventListener mRefListener;
     private Bus mBus;
     private Location cameraLocation;
-    private Map<String, Marker> busMarkerList;
     private LocationManager locationManager;
     PlaceAutocompleteFragment placeAutoComplete;
 
@@ -53,6 +52,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        setTitle("TJ-Way - Pilih Halte Tujuan");
         Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(myToolbar);
 
@@ -65,8 +65,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mRef = database.getReference("Haltes");
         mRefBus = database.getReference("Buses");
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        busMarkerList = new HashMap<String, Marker>();
 
         placeAutoComplete = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete);
         placeAutoComplete.setOnPlaceSelectedListener(new PlaceSelectionListener() {
@@ -110,6 +108,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.addMarker(new MarkerOptions()
                             .position(loc)
                             .title(mHalte.getName())
+                            .snippet("Halte")
                     );
                 }
             }
@@ -119,33 +118,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
-        mRefBus.addValueEventListener(new ValueEventListener() {
+
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot valueSnapshot : dataSnapshot.getChildren()) {
-                    Bus mBus = valueSnapshot.getValue(Bus.class);
-                    LatLng busLoc = new LatLng(mBus.getLatitude(), mBus.getLongitude());
-                    Marker busMarker = busMarkerList.get(mBus.getPlat());
-                    if(busMarker == null){
-                        busMarker = mMap.addMarker(new MarkerOptions()
-                                .position(busLoc)
-                                .title(mBus.getPlat())
-                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_marker))
-                                .snippet("Penumpang : " + mBus.getPassenger_count())
-                        );
-                        busMarkerList.put(mBus.getPlat(), busMarker);
-                    }
-                    else{
-                        busMarker.setPosition(busLoc);
-                    }
+            public View getInfoWindow(Marker marker) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                View v = null;
+                try{
+                    v = getLayoutInflater().inflate(R.layout.custom_infowindow, null);
+                    TextView mHalteText = v.findViewById(R.id.halteTxt);
+                    mHalteText.setText(marker.getTitle());
                 }
-        }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
+                catch (Exception ex){
+                    System.out.print(ex.getMessage());
+                }
+                return v;
             }
         });
+
+        mMap.setOnInfoWindowClickListener(this);
+
 
         if(cameraLocation != null)
         {
@@ -157,7 +153,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .build();                   // Creates a CameraPosition from the builder
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
+    }
 
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        String halteTujuan = marker.getTitle();
+        Intent intent = new Intent(this, PilihHalteActivity.class);
+        intent.putExtra("halteTujuan", halteTujuan);
+        startActivity(intent);
     }
 
     @Override
@@ -170,7 +173,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.action_profile) {
-            startActivity(new Intent(MapsActivity.this, ProfileActivity.class));
+            startActivity(new Intent(MapsActivity2.this, ProfileActivity.class));
         }
         return true;
     }

@@ -8,6 +8,7 @@ public class Halte {
     public String name;
     public double latitude;
     public double longitude;
+    public double jarak;
 
     public Halte() {}
 
@@ -26,5 +27,9 @@ public class Halte {
     public double getLongitude(){
         return longitude;
     }
+    public double getJarak() {return jarak;}
 
+    public void setJarak(double jarak){
+        this.jarak = jarak;
+    }
 }
